@@ -4,8 +4,8 @@
 4社のパブリックAPI（認証不要）からBTC/JPYのask/bidを取得し、
 スプレッド率(%) = (ask - bid) / ask * 100 を計算して docs/spread.json に出力する。
 
-表示用のスプレッド率は「直近10営業日の平均」。履歴は spread.json 内の
-history フィールドに直近10営業日分だけ保持する（単一ファイル上書き方式のまま。
+表示用のスプレッド率は「直近7営業日の平均」。履歴は spread.json 内の
+history フィールドに直近7営業日分だけ保持する（単一ファイル上書き方式のまま。
 別ファイル・外部DBは使わない）。
 
 - Python 3.12 想定（3.9以降で動作）。標準ライブラリのみ使用。
@@ -28,7 +28,7 @@ from pathlib import Path
 SAMPLE_COUNT = 3        # 1回の実行で取得するサンプル数
 SAMPLE_INTERVAL_SEC = 2  # サンプル間の待機秒数
 REQUEST_TIMEOUT_SEC = 10  # 各APIリクエストのタイムアウト秒数
-HISTORY_DAYS = 10       # スプレッド率の平均対象（直近の営業日数）
+HISTORY_DAYS = 7        # スプレッド率の平均対象（直近の営業日数）
 
 JST = timezone(timedelta(hours=9))  # 日本標準時（実行環境のローカルタイムに依存しない）
 
