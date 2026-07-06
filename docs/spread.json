@@ -1,30 +1,67 @@
 {
   "updated": "2026-07-06",
   "base_currency": "BTC/JPY",
+  "window_days": 10,
   "rows": [
     {
       "name": "GMOコイン（取引所）",
-      "ask": 10248187,
-      "bid": 10247999,
-      "spread": 0.002
+      "ask": 10237923,
+      "bid": 10237878,
+      "spread": 0.0,
+      "days": 1,
+      "history": [
+        {
+          "date": "2026-07-06",
+          "ask": 10237923,
+          "bid": 10237878,
+          "spread": 0.0
+        }
+      ]
     },
     {
       "name": "bitFlyer（取引所）",
-      "ask": 10250913,
-      "bid": 10245744,
-      "spread": 0.05
+      "ask": 10239727,
+      "bid": 10236298,
+      "spread": 0.033,
+      "days": 1,
+      "history": [
+        {
+          "date": "2026-07-06",
+          "ask": 10239727,
+          "bid": 10236298,
+          "spread": 0.033
+        }
+      ]
     },
     {
       "name": "Coincheck（取引所）",
-      "ask": 10250673,
-      "bid": 10249054,
-      "spread": 0.016
+      "ask": 10242013,
+      "bid": 10239741,
+      "spread": 0.022,
+      "days": 1,
+      "history": [
+        {
+          "date": "2026-07-06",
+          "ask": 10242013,
+          "bid": 10239741,
+          "spread": 0.022
+        }
+      ]
     },
     {
       "name": "bitbank（取引所）",
-      "ask": 10248448,
-      "bid": 10247493,
-      "spread": 0.009
+      "ask": 10237882,
+      "bid": 10237841,
+      "spread": 0.0,
+      "days": 1,
+      "history": [
+        {
+          "date": "2026-07-06",
+          "ask": 10237882,
+          "bid": 10237841,
+          "spread": 0.0
+        }
+      ]
     }
   ]
 }

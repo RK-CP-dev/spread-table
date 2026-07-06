@@ -4,9 +4,13 @@
 4社のパブリックAPI（認証不要）からBTC/JPYのask/bidを取得し、
 スプレッド率(%) = (ask - bid) / ask * 100 を計算して docs/spread.json に出力する。
 
+表示用のスプレッド率は「直近10営業日の平均」。履歴は spread.json 内の
+history フィールドに直近10営業日分だけ保持する（単一ファイル上書き方式のまま。
+別ファイル・外部DBは使わない）。
+
 - Python 3.12 想定（3.9以降で動作）。標準ライブラリのみ使用。
 - APIキー等の秘匿情報は一切使用しない。
-- 1社の取得失敗が全体を止めない（失敗した社はスキップしてwarnログ）。
+- 1社の取得失敗が全体を止めない（当日分をスキップし、保持済み履歴で継続）。
 """
 
 import json
@@ -24,6 +28,7 @@ from pathlib import Path
 SAMPLE_COUNT = 3        # 1回の実行で取得するサンプル数
 SAMPLE_INTERVAL_SEC = 2  # サンプル間の待機秒数
 REQUEST_TIMEOUT_SEC = 10  # 各APIリクエストのタイムアウト秒数
+HISTORY_DAYS = 10       # スプレッド率の平均対象（直近の営業日数）
 
 JST = timezone(timedelta(hours=9))  # 日本標準時（実行環境のローカルタイムに依存しない）
 
@@ -140,46 +145,109 @@ def collect_samples():
     return samples
 
 
-def build_rows(samples):
-    """サンプルの平均からJSON出力用のrowsを構築する（新しいlistを返す）。"""
+def load_previous_histories():
+    """既存のspread.jsonから各社の履歴を読み込む（新しいdictを返す）。
+
+    ファイルが無い・壊れている・旧形式（historyなし）の場合は空履歴として扱う。
+    """
+    try:
+        data = json.loads(OUTPUT_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    histories = {}
+    for row in data.get("rows", []):
+        name = row.get("name")
+        history = row.get("history")
+        if not isinstance(name, str) or not isinstance(history, list):
+            continue
+        valid_entries = []
+        for entry in history:
+            try:
+                valid_entries.append({
+                    "date": str(entry["date"]),
+                    "ask": int(entry["ask"]),
+                    "bid": int(entry["bid"]),
+                    "spread": float(entry["spread"]),
+                })
+            except (KeyError, TypeError, ValueError):
+                continue
+        histories[name] = valid_entries
+    return histories
+
+
+def build_rows(samples, histories, today):
+    """当日サンプルと保持済み履歴からJSON出力用のrowsを構築する（新しいlistを返す）。
+
+    - 当日分が取得できた社: 履歴に当日エントリを追加（同日重複は置換）し、直近
+      HISTORY_DAYS 件だけ保持する
+    - 当日分が取得できなかった社: 保持済み履歴のみで継続（履歴も無ければ除外）
+    - 表示用 spread は履歴のスプレッド率の平均
+    """
     rows = []
     for exchange in EXCHANGES:
         name = exchange["name"]
         pairs = samples.get(name, [])
-        if not pairs:
-            logger.warning("%s: no valid samples — excluded from output", name)
+        old_history = histories.get(name, [])
+        if pairs:
+            avg_ask = sum(pair[0] for pair in pairs) / len(pairs)
+            avg_bid = sum(pair[1] for pair in pairs) / len(pairs)
+            spread_pct = (avg_ask - avg_bid) / avg_ask * 100
+            today_entry = {
+                "date": today,
+                "ask": round(avg_ask),
+                "bid": round(avg_bid),
+                "spread": round(spread_pct, 3),
+            }
+            history = [
+                entry for entry in old_history if entry["date"] != today
+            ] + [today_entry]
+            history = history[-HISTORY_DAYS:]
+        elif old_history:
+            logger.warning(
+                "%s: no valid samples today — keeping stored history only", name
+            )
+            history = old_history[-HISTORY_DAYS:]
+        else:
+            logger.warning(
+                "%s: no valid samples and no history — excluded from output", name
+            )
             continue
-        avg_ask = sum(pair[0] for pair in pairs) / len(pairs)
-        avg_bid = sum(pair[1] for pair in pairs) / len(pairs)
-        spread_pct = (avg_ask - avg_bid) / avg_ask * 100
+        latest = history[-1]
+        avg_spread = sum(entry["spread"] for entry in history) / len(history)
         rows.append({
             "name": name,
-            "ask": round(avg_ask),
-            "bid": round(avg_bid),
-            "spread": round(spread_pct, 3),
+            "ask": latest["ask"],
+            "bid": latest["bid"],
+            "spread": round(avg_spread, 3),
+            "days": len(history),
+            "history": history,
         })
     return rows
 
 
-def build_output(rows):
+def build_output(rows, today):
     """出力用dictを構築する。updatedは毎回必ずJSTの当日日付になる。"""
-    today_jst = datetime.now(JST).strftime("%Y-%m-%d")
     return {
-        "updated": today_jst,
+        "updated": today,
         "base_currency": "BTC/JPY",
+        "window_days": HISTORY_DAYS,
         "rows": rows,
     }
 
 
 def main():
     samples = collect_samples()
-    rows = build_rows(samples)
 
-    if not rows:
+    # 全社とも当日分の取得に失敗した場合はファイルを更新せず異常終了する
+    if not any(samples.values()):
         logger.error("all exchanges failed — spread.json not updated")
         return 1
 
-    output = build_output(rows)
+    today = datetime.now(JST).strftime("%Y-%m-%d")
+    histories = load_previous_histories()
+    rows = build_rows(samples, histories, today)
+
+    output = build_output(rows, today)
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.write_text(
         json.dumps(output, ensure_ascii=False, indent=2) + "\n",
