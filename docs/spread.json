@@ -1,0 +1,30 @@
+{
+  "updated": "2026-07-06",
+  "base_currency": "BTC/JPY",
+  "rows": [
+    {
+      "name": "GMOコイン（取引所）",
+      "ask": 10258639,
+      "bid": 10256734,
+      "spread": 0.019
+    },
+    {
+      "name": "bitFlyer（取引所）",
+      "ask": 10255165,
+      "bid": 10252515,
+      "spread": 0.026
+    },
+    {
+      "name": "Coincheck（取引所）",
+      "ask": 10262548,
+      "bid": 10259645,
+      "spread": 0.028
+    },
+    {
+      "name": "bitbank（取引所）",
+      "ask": 10258879,
+      "bid": 10258322,
+      "spread": 0.005
+    }
+  ]
+}

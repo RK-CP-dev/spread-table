@@ -1,0 +1,45 @@
+name: Keepalive
+
+# パブリックリポジトリは60日間「活動」がないとスケジュールワークフローが
+# 自動停止するGitHub仕様への保険。
+# 通常は update-spread.yml の週次commitが活動になるため発動不要だが、
+# 万一そちらが止まった場合の二重の保険として、空commitを定期的に打つ。
+#
+# セキュリティ方針: 第三者製アクション（keepalive-workflow等）は使わず、
+# git標準コマンドのみで自作している（サプライチェーンリスク回避）。
+
+on:
+  schedule:
+    # cronはUTC固定。JST = UTC + 9時間。
+    # "37 1 1,15 * *" = 毎月1日・15日 01:37 UTC = 同日 10:37 JST
+    # （cronでは「45日ごと」を直接表現できないため隔週相当の頻度で代替。
+    #   下のステップで「最終commitから40日以上経過した場合のみ」実行する）
+    - cron: "37 1 1,15 * *"
+  workflow_dispatch: {}  # 手動テスト実行用
+
+permissions:
+  contents: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      # アクションはタグ差し替え攻撃を防ぐためコミットSHAに固定している（サプライチェーン対策）
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Keepalive commit if repository is stale
+        run: |
+          LAST_COMMIT_EPOCH=$(git log -1 --format=%ct)
+          NOW_EPOCH=$(date +%s)
+          DAYS_SINCE=$(( (NOW_EPOCH - LAST_COMMIT_EPOCH) / 86400 ))
+          echo "Days since last commit: ${DAYS_SINCE}"
+          # 週次のupdate-spreadが正常なら常にここで終了する
+          if [ "${DAYS_SINCE}" -lt 40 ]; then
+            echo "Repository is active. No keepalive needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --allow-empty -m "chore: keepalive"
+          git push

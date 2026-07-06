@@ -1,0 +1,246 @@
+<!-- ============================================================
+  CoinPost 販売所スプレッド率テーブル（週1自動更新）
+  WPの「追加文章」にこのファイルの中身をそのまま貼り付けて使用する。
+  データソース: GitHub Pages 上の spread.json（週1回自動更新）
+  ※ DATA_URL は実際のGitHub Pages URLに書き換えること（README参照）
+============================================================ -->
+
+<!-- (1) HTML構造 -->
+<div class="cp-spread-scope">
+  <p class="cp-spread-updated" id="cp-spread-updated"></p>
+  <div class="cp-spread-table-wrap">
+    <table class="cp-spread-table">
+      <thead>
+        <tr>
+          <th class="cp-spread-th">取引所</th>
+          <th class="cp-spread-th">購入価格<br>(ask)</th>
+          <th class="cp-spread-th">売却価格<br>(bid)</th>
+          <th class="cp-spread-th">スプレッド率</th>
+          <th class="cp-spread-th">評価</th>
+        </tr>
+      </thead>
+      <tbody id="cp-spread-tbody">
+        <tr>
+          <td class="cp-spread-td cp-spread-loading" colspan="5">読み込み中…</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="cp-spread-note">※スプレッド率(%)＝（購入価格−売却価格）÷購入価格×100。数値は集計時点のもので、市況により変動します。</p>
+</div>
+
+<!-- (2) スタイル（.cp-spread-scope 配下に限定・テーマCSS干渉排除のため全プロパティ !important） -->
+<style>
+.cp-spread-scope {
+  margin: 1.5em 0 !important;
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+  color: #333333 !important;
+}
+.cp-spread-scope .cp-spread-updated {
+  margin: 0 0 8px 0 !important;
+  font-size: 13px !important;
+  color: #666666 !important;
+  text-align: right !important;
+}
+.cp-spread-scope .cp-spread-table-wrap {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+.cp-spread-scope .cp-spread-table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  border: 1px solid #d9d9d9 !important;
+  table-layout: auto !important;
+  margin: 0 !important;
+  background: #ffffff !important;
+}
+.cp-spread-scope .cp-spread-th {
+  background: #f2f5f8 !important;
+  border: 1px solid #d9d9d9 !important;
+  padding: 8px 10px !important;
+  font-size: 13px !important;
+  font-weight: bold !important;
+  color: #333333 !important;
+  text-align: center !important;
+  white-space: nowrap !important;
+  vertical-align: middle !important;
+}
+.cp-spread-scope .cp-spread-td {
+  border: 1px solid #d9d9d9 !important;
+  padding: 8px 10px !important;
+  font-size: 14px !important;
+  color: #333333 !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  background: #ffffff !important;
+}
+.cp-spread-scope .cp-spread-td-name {
+  text-align: left !important;
+  font-weight: bold !important;
+  white-space: nowrap !important;
+}
+.cp-spread-scope .cp-spread-td-num {
+  text-align: right !important;
+  white-space: nowrap !important;
+  font-variant-numeric: tabular-nums !important;
+}
+.cp-spread-scope .cp-spread-best {
+  background: #fff6d9 !important;
+  font-weight: bold !important;
+  color: #b7791f !important;
+}
+.cp-spread-scope .cp-spread-loading {
+  color: #888888 !important;
+}
+.cp-spread-scope .cp-spread-error {
+  color: #c0392b !important;
+}
+.cp-spread-scope .cp-spread-note {
+  margin: 8px 0 0 0 !important;
+  font-size: 12px !important;
+  color: #888888 !important;
+}
+@media (max-width: 480px) {
+  .cp-spread-scope .cp-spread-th {
+    padding: 6px 6px !important;
+    font-size: 11px !important;
+  }
+  .cp-spread-scope .cp-spread-td {
+    padding: 6px 6px !important;
+    font-size: 12px !important;
+  }
+  .cp-spread-scope .cp-spread-note {
+    font-size: 11px !important;
+  }
+}
+</style>
+
+<!-- (3) スクリプト（アロー関数禁止・IIFE・strict mode） -->
+<script>
+(function () {
+  "use strict";
+
+  // データソース: 本リポジトリのGitHub Pages
+  var DATA_URL = "https://rk-cp-dev.github.io/spread-table/spread.json";
+
+  var ERROR_MESSAGE = "データを取得できませんでした。時間をおいて再度お試しください。";
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function formatYen(value) {
+    return Math.round(value).toLocaleString("ja-JP") + "円";
+  }
+
+  function ratingSymbol(spread) {
+    // しきい値（調整可能な定数）
+    var THRESHOLD_EXCELLENT = 0.1; // ≤0.1% → ◎
+    var THRESHOLD_FAIR = 0.6;      // ≤0.6% → △、それ超 → ✕
+    if (spread <= THRESHOLD_EXCELLENT) {
+      return "◎";
+    }
+    if (spread <= THRESHOLD_FAIR) {
+      return "△";
+    }
+    return "✕";
+  }
+
+  function showError(tbody) {
+    tbody.innerHTML =
+      '<tr><td class="cp-spread-td cp-spread-error" colspan="5">' +
+      escapeHtml(ERROR_MESSAGE) +
+      "</td></tr>";
+  }
+
+  function renderRows(tbody, rows) {
+    // 元配列を変更しないよう、コピーしてからスプレッド率の昇順にソート
+    var sorted = rows.slice().sort(function (a, b) {
+      return a.spread - b.spread;
+    });
+
+    var bestSpread = sorted[0].spread;
+    var html = "";
+    var i;
+    for (i = 0; i < sorted.length; i++) {
+      var row = sorted[i];
+      var isBest = row.spread === bestSpread;
+      var spreadClass = "cp-spread-td cp-spread-td-num";
+      if (isBest) {
+        spreadClass += " cp-spread-best";
+      }
+      html +=
+        "<tr>" +
+        '<td class="cp-spread-td cp-spread-td-name">' + escapeHtml(row.name) + "</td>" +
+        '<td class="cp-spread-td cp-spread-td-num">' + escapeHtml(formatYen(row.ask)) + "</td>" +
+        '<td class="cp-spread-td cp-spread-td-num">' + escapeHtml(formatYen(row.bid)) + "</td>" +
+        '<td class="' + spreadClass + '">' + escapeHtml(row.spread.toFixed(3)) + "%</td>" +
+        '<td class="cp-spread-td">' + escapeHtml(ratingSymbol(row.spread)) + "</td>" +
+        "</tr>";
+    }
+    tbody.innerHTML = html;
+  }
+
+  function renderUpdated(data) {
+    var updatedEl = document.getElementById("cp-spread-updated");
+    if (updatedEl && data.updated) {
+      updatedEl.textContent =
+        "集計日：" + data.updated +
+        (data.base_currency ? "（" + data.base_currency + "）" : "");
+    }
+  }
+
+  function isValidRow(row) {
+    return (
+      row &&
+      typeof row.name === "string" &&
+      typeof row.ask === "number" &&
+      typeof row.bid === "number" &&
+      typeof row.spread === "number"
+    );
+  }
+
+  function main() {
+    var tbody = document.getElementById("cp-spread-tbody");
+    if (!tbody) {
+      return;
+    }
+    fetch(DATA_URL, { cache: "no-store" })
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error("HTTP " + response.status);
+        }
+        return response.json();
+      })
+      .then(function (data) {
+        if (!data || !Array.isArray(data.rows) || data.rows.length === 0) {
+          throw new Error("empty data");
+        }
+        var validRows = data.rows.filter(isValidRow);
+        if (validRows.length === 0) {
+          throw new Error("no valid rows");
+        }
+        renderUpdated(data);
+        renderRows(tbody, validRows);
+      })
+      .catch(function (err) {
+        if (window.console && window.console.warn) {
+          window.console.warn("cp-spread: " + err.message);
+        }
+        showError(tbody);
+      });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", main);
+  } else {
+    main();
+  }
+})();
+</script>

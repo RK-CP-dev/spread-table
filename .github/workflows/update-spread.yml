@@ -1,0 +1,43 @@
+name: Update spread data
+
+on:
+  schedule:
+    # cronはUTC固定。JST = UTC + 9時間。
+    # "23 0 * * 1" = 毎週月曜 00:23 UTC = 毎週月曜 09:23 JST
+    # 毎時0分ちょうどはGitHub Actionsの遅延・ドロップが集中するため避けている。
+    - cron: "23 0 * * 1"
+  workflow_dispatch: {}  # 手動テスト実行用
+
+permissions:
+  contents: write  # spread.json のcommit & pushに必要（これ以外の権限は付与しない）
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      # アクションはタグ差し替え攻撃を防ぐためコミットSHAに固定している（サプライチェーン対策）
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Collect spread data
+        # 失敗時はここでジョブが失敗として終了する（握りつぶさない）。
+        # ジョブ失敗時はリポジトリ作成者にGitHubからメール通知が届く。
+        run: python scripts/collect_spread.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/spread.json
+          # 差分がなければcommitしない（updatedが毎回更新されるため通常は差分が出る）
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: update spread data"
+            git push
+          fi
