@@ -34,7 +34,7 @@ JST = timezone(timedelta(hours=9))  # 日本標準時（実行環境のローカ
 
 OUTPUT_PATH = Path(__file__).resolve().parent.parent / "docs" / "spread.json"
 
-USER_AGENT = "coinpost-spread-collector/1.0"
+USER_AGENT = "spread-collector/1.0"
 
 logging.basicConfig(
     level=logging.INFO,

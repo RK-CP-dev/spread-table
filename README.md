@@ -1,6 +1,6 @@
 # 取引所スプレッド率テーブル（毎日14時 自動更新）
 
-CoinPostの「取引所ランキング記事」に掲載する、BTC/JPYスプレッド率テーブルの自動更新システムです。
+「取引所ランキング記事」に掲載する、BTC/JPYスプレッド率テーブルの自動更新システムです。
 
 取引所4社（GMOコイン・bitFlyer・Coincheck・bitbank）の公開APIから毎日14時に自動でスプレッド率を集計し、WordPress記事内の表を最新に保ちます。
 
@@ -101,7 +101,7 @@ var DATA_URL = "https://rk-cp-dev.github.io/spread-table/spread.json";
 
 1. WP管理画面の **「追加文章」** を開く
 2. `wordpress/addtexts-block.html` の中身を **すべてコピーして貼り付け**、保存
-3. 自動発行されるショートコード（例：`[addtexts addid=721727]`）を控える
+3. 自動発行されるショートコード（例：`[addtexts addid=XXXXXX]`）を控える
 
 > **初回は必ず実機確認してください**：追加文章内の `<script>` タグがWP側のセキュリティプラグイン等で除去されていないか、実際の記事プレビューで表が表示されることを確認します。
 
