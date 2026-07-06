@@ -201,7 +201,7 @@ def build_rows(samples, histories, today):
                 "date": today,
                 "ask": round(avg_ask),
                 "bid": round(avg_bid),
-                "spread": round(spread_pct, 3),
+                "spread": round(spread_pct, 4),
             }
             history = [
                 entry for entry in old_history if entry["date"] != today
@@ -224,7 +224,7 @@ def build_rows(samples, histories, today):
             "name": name,
             "ask": latest["ask"],
             "bid": latest["bid"],
-            "spread": round(avg_spread, 3),
+            "spread": round(avg_spread, 4),
             "days": len(history),
             "history": history,
         })

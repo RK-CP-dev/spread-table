@@ -6,64 +6,64 @@
     {
       "key": "gmo",
       "name": "GMOコイン（取引所）",
-      "ask": 10227890,
-      "bid": 10223751,
-      "spread": 0.04,
+      "ask": 10219253,
+      "bid": 10218301,
+      "spread": 0.0093,
       "days": 1,
       "history": [
         {
           "date": "2026-07-06",
-          "ask": 10227890,
-          "bid": 10223751,
-          "spread": 0.04
+          "ask": 10219253,
+          "bid": 10218301,
+          "spread": 0.0093
         }
       ]
     },
     {
       "key": "bitflyer",
       "name": "bitFlyer（取引所）",
-      "ask": 10227670,
-      "bid": 10225000,
-      "spread": 0.026,
+      "ask": 10218525,
+      "bid": 10215547,
+      "spread": 0.0291,
       "days": 1,
       "history": [
         {
           "date": "2026-07-06",
-          "ask": 10227670,
-          "bid": 10225000,
-          "spread": 0.026
+          "ask": 10218525,
+          "bid": 10215547,
+          "spread": 0.0291
         }
       ]
     },
     {
       "key": "coincheck",
       "name": "Coincheck（取引所）",
-      "ask": 10229296,
-      "bid": 10226818,
-      "spread": 0.024,
+      "ask": 10220426,
+      "bid": 10218744,
+      "spread": 0.0165,
       "days": 1,
       "history": [
         {
           "date": "2026-07-06",
-          "ask": 10229296,
-          "bid": 10226818,
-          "spread": 0.024
+          "ask": 10220426,
+          "bid": 10218744,
+          "spread": 0.0165
         }
       ]
     },
     {
       "key": "bitbank",
       "name": "bitbank（取引所）",
-      "ask": 10220000,
-      "bid": 10219999,
-      "spread": 0.0,
+      "ask": 10215752,
+      "bid": 10215630,
+      "spread": 0.0012,
       "days": 1,
       "history": [
         {
           "date": "2026-07-06",
-          "ask": 10220000,
-          "bid": 10219999,
-          "spread": 0.0
+          "ask": 10215752,
+          "bid": 10215630,
+          "spread": 0.0012
         }
       ]
     }
