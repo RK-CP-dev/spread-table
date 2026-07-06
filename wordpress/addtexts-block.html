@@ -180,7 +180,7 @@
         '<td class="cp-spread-td cp-spread-td-name">' + escapeHtml(row.name) + "</td>" +
         '<td class="cp-spread-td cp-spread-td-num">' + escapeHtml(formatYen(row.ask)) + "</td>" +
         '<td class="cp-spread-td cp-spread-td-num">' + escapeHtml(formatYen(row.bid)) + "</td>" +
-        '<td class="' + spreadClass + '">' + escapeHtml(row.spread.toFixed(4)) + "%</td>" +
+        '<td class="' + spreadClass + '">' + escapeHtml(row.spread.toFixed(3)) + "%</td>" +
         '<td class="cp-spread-td">' + escapeHtml(ratingSymbol(row.spread)) + "</td>" +
         "</tr>";
     }
