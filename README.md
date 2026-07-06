@@ -30,7 +30,8 @@ GitHub Pages で配信 ───────────────────
 | `.github/workflows/update-spread.yml` | 上記スクリプトを平日（月〜金）14:03(JST)に自動実行するワークフロー |
 | `.github/workflows/keepalive.yml` | 60日無活動によるワークフロー自動停止への保険（通常は何もしない） |
 | `docs/spread.json` | 集計結果データ（GitHub Pagesで配信される） |
-| `wordpress/addtexts-block.html` | WPの「追加文章」に貼り付ける表示用HTML |
+| `wordpress/addtexts-block.html` | WPの「追加文章」に貼り付ける比較表HTML |
+| `wordpress/addtexts-value.html` | 個別スプレッド数値を記事内に埋め込む部品HTML（下記参照） |
 
 ### セキュリティについて
 
@@ -107,6 +108,36 @@ var DATA_URL = "https://rk-cp-dev.github.io/spread-table/spread.json";
 ### 7.【WP側の手作業】記事への挿入
 
 取引所ランキング記事の掲載したい位置に、控えたショートコードを挿入して記事を更新します。
+
+---
+
+## 個別スプレッド数値の埋め込み（addtexts-value.html）
+
+比較表とは別に、**各取引所の数値を単体で**記事内に表示できます（例：各社の紹介セクションに「スプレッド率 0.021%」だけを置く）。スタイルは付けていないプレーンなテキスト出力なので、見た目は記事側のCSSで自由に整形できます。
+
+### 使い方
+
+1. `wordpress/addtexts-value.html` の中身をWPの「追加文章」に貼り付ける
+2. 冒頭の `<span>` タグの **2つの属性だけ** を表示したい内容に変更して保存（`<script>` 部分は全変種で共通・変更不要）
+
+```html
+<span class="cp-spread-value" data-key="gmo" data-field="spread">—</span>
+```
+
+| 属性 | 指定できる値 |
+|---|---|
+| `data-key` | `gmo`（GMOコイン）/ `bitflyer` / `coincheck` / `bitbank` |
+| `data-field` | `spread`（10日間平均スプレッド率 → 例 `0.021%`）/ `ask`（購入価格 → 例 `10,248,187円`）/ `bid`（売却価格） |
+
+3. 必要な組み合わせの数だけ追加文章を登録し、発行された各ショートコードを記事の該当箇所に挿入
+
+### 補足
+
+- 数値は比較表と同じ `spread.json` から取得され、平日14時に自動更新されます
+- 取得失敗時は「—」のまま表示され、記事レイアウトは壊れません
+- 同一ページに複数の埋め込みがあっても、データ取得は1回だけ共有されます
+- 出力spanには `data-updated`（集計日）と `data-days`（平均日数）が自動付与されるため、記事側CSS/JSで注記表示にも使えます
+- 挿入はHTMLとして解釈されない `textContent` 方式のため、データ改ざん時もスクリプトは実行されません
 
 ---
 

@@ -70,23 +70,28 @@ def parse_bitbank(payload):
 
 # name には「（取引所）」「（販売所）」の区別を含める。
 # bitbankのtickerは板（=取引所）の値であり、販売所レートと混同させないため。
+# key は表示側HTMLが参照する安定識別子。name の表記を変えても key は変えないこと。
 EXCHANGES = [
     {
+        "key": "gmo",
         "name": "GMOコイン（取引所）",
         "url": "https://api.coin.z.com/public/v1/ticker?symbol=BTC",
         "parser": parse_gmo,
     },
     {
+        "key": "bitflyer",
         "name": "bitFlyer（取引所）",
         "url": "https://api.bitflyer.com/v1/ticker?product_code=BTC_JPY",
         "parser": parse_bitflyer,
     },
     {
+        "key": "coincheck",
         "name": "Coincheck（取引所）",
         "url": "https://coincheck.com/api/ticker",
         "parser": parse_coincheck,
     },
     {
+        "key": "bitbank",
         "name": "bitbank（取引所）",
         "url": "https://public.bitbank.cc/btc_jpy/ticker",
         "parser": parse_bitbank,
@@ -215,6 +220,7 @@ def build_rows(samples, histories, today):
         latest = history[-1]
         avg_spread = sum(entry["spread"] for entry in history) / len(history)
         rows.append({
+            "key": exchange["key"],
             "name": name,
             "ask": latest["ask"],
             "bid": latest["bid"],

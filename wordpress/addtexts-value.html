@@ -1,0 +1,98 @@
+<!-- ============================================================
+  CoinPost 個別スプレッド数値の埋め込み部品（平日14時 自動更新）
+  WPの「追加文章」にこのファイルの中身を貼り付け、
+  <span> の data-key / data-field だけを変えて変種を登録する。
+  <script> 部分は全変種で共通（変更不要）。
+
+  data-key  : gmo | bitflyer | coincheck | bitbank
+  data-field: spread（10日間平均スプレッド率） | ask（購入価格） | bid（売却価格）
+
+  出力例: spread → 「0.021%」 / ask → 「10,248,187円」
+  スタイルは付けていない（記事側のCSSで整形する前提）。
+  取得失敗時は「—」のまま表示され、記事は壊れない。
+============================================================ -->
+
+<span class="cp-spread-value" data-key="gmo" data-field="spread">—</span>
+
+<script>
+(function () {
+  "use strict";
+
+  var DATA_URL = "https://rk-cp-dev.github.io/spread-table/spread.json";
+  var PLACEHOLDER = "—";
+
+  function findRow(rows, key) {
+    var i;
+    for (i = 0; i < rows.length; i++) {
+      if (rows[i] && rows[i].key === key) {
+        return rows[i];
+      }
+    }
+    return null;
+  }
+
+  function formatValue(row, field) {
+    if (field === "spread" && typeof row.spread === "number") {
+      return row.spread.toFixed(3) + "%";
+    }
+    if ((field === "ask" || field === "bid") && typeof row[field] === "number") {
+      return Math.round(row[field]).toLocaleString("ja-JP") + "円";
+    }
+    return null;
+  }
+
+  function fillAll(data) {
+    // ページ内の全埋め込みspanをまとめて埋める（複数変種が共存しても安全・冪等）
+    var spans = document.querySelectorAll("span.cp-spread-value[data-key][data-field]");
+    var i;
+    for (i = 0; i < spans.length; i++) {
+      var span = spans[i];
+      var row = findRow(data.rows, span.getAttribute("data-key"));
+      if (!row) {
+        span.textContent = PLACEHOLDER;
+        continue;
+      }
+      var text = formatValue(row, span.getAttribute("data-field"));
+      // textContentで挿入するためHTMLとして解釈されない（XSS安全）
+      span.textContent = text !== null ? text : PLACEHOLDER;
+      if (data.updated) {
+        span.setAttribute("data-updated", String(data.updated));
+      }
+      if (typeof row.days === "number") {
+        span.setAttribute("data-days", String(row.days));
+      }
+    }
+  }
+
+  function main() {
+    // 同一ページに複数の埋め込みがあってもfetchは1回だけ共有する
+    if (!window.__cpSpreadJsonPromise) {
+      window.__cpSpreadJsonPromise = fetch(DATA_URL, { cache: "no-store" })
+        .then(function (response) {
+          if (!response.ok) {
+            throw new Error("HTTP " + response.status);
+          }
+          return response.json();
+        });
+    }
+    window.__cpSpreadJsonPromise
+      .then(function (data) {
+        if (!data || !Array.isArray(data.rows)) {
+          throw new Error("invalid data");
+        }
+        fillAll(data);
+      })
+      .catch(function (err) {
+        if (window.console && window.console.warn) {
+          window.console.warn("cp-spread-value: " + err.message);
+        }
+      });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", main);
+  } else {
+    main();
+  }
+})();
+</script>
