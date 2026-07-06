@@ -3,9 +3,9 @@ name: Update spread data
 on:
   schedule:
     # cronはUTC固定。JST = UTC + 9時間。
-    # "23 0 * * 1" = 毎週月曜 00:23 UTC = 毎週月曜 09:23 JST
+    # "3 5 * * 1-5" = 平日（月〜金） 05:03 UTC = 平日（月〜金） 14:03 JST
     # 毎時0分ちょうどはGitHub Actionsの遅延・ドロップが集中するため避けている。
-    - cron: "23 0 * * 1"
+    - cron: "3 5 * * 1-5"
   workflow_dispatch: {}  # 手動テスト実行用
 
 permissions:
