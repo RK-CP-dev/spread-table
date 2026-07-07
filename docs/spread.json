@@ -1,20 +1,26 @@
 {
-  "updated": "2026-07-06",
+  "updated": "2026-07-07",
   "base_currency": "BTC/JPY",
   "window_days": 7,
   "rows": [
     {
       "key": "gmo",
       "name": "GMOコイン（取引所）",
-      "ask": 10218207,
-      "bid": 10218206,
+      "ask": 10223361,
+      "bid": 10223360,
       "spread": 0.0,
-      "days": 1,
+      "days": 2,
       "history": [
         {
           "date": "2026-07-06",
           "ask": 10218207,
           "bid": 10218206,
+          "spread": 0.0
+        },
+        {
+          "date": "2026-07-07",
+          "ask": 10223361,
+          "bid": 10223360,
           "spread": 0.0
         }
       ]
@@ -22,48 +28,66 @@
     {
       "key": "bitflyer",
       "name": "bitFlyer（取引所）",
-      "ask": 10216421,
-      "bid": 10213724,
-      "spread": 0.026,
-      "days": 1,
+      "ask": 10220883,
+      "bid": 10218017,
+      "spread": 0.027,
+      "days": 2,
       "history": [
         {
           "date": "2026-07-06",
           "ask": 10216421,
           "bid": 10213724,
           "spread": 0.026
+        },
+        {
+          "date": "2026-07-07",
+          "ask": 10220883,
+          "bid": 10218017,
+          "spread": 0.028
         }
       ]
     },
     {
       "key": "coincheck",
       "name": "Coincheck（取引所）",
-      "ask": 10220032,
-      "bid": 10219260,
-      "spread": 0.008,
-      "days": 1,
+      "ask": 10223122,
+      "bid": 10221462,
+      "spread": 0.012,
+      "days": 2,
       "history": [
         {
           "date": "2026-07-06",
           "ask": 10220032,
           "bid": 10219260,
           "spread": 0.008
+        },
+        {
+          "date": "2026-07-07",
+          "ask": 10223122,
+          "bid": 10221462,
+          "spread": 0.016
         }
       ]
     },
     {
       "key": "bitbank",
       "name": "bitbank（取引所）",
-      "ask": 10218010,
-      "bid": 10217219,
-      "spread": 0.008,
-      "days": 1,
+      "ask": 10223812,
+      "bid": 10223811,
+      "spread": 0.004,
+      "days": 2,
       "history": [
         {
           "date": "2026-07-06",
           "ask": 10218010,
           "bid": 10217219,
           "spread": 0.008
+        },
+        {
+          "date": "2026-07-07",
+          "ask": 10223812,
+          "bid": 10223811,
+          "spread": 0.0
         }
       ]
     }
